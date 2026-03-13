@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memoria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f5f5f5;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #111;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .layout {
+      width: 100%;
+      max-width: 720px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0 1.5rem;
+      position: relative;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 3rem 0 0;
+      flex-shrink: 0;
+      transition: padding 0.4s ease;
+    }
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #111;
+      line-height: 1;
+    }
+    .header p {
+      font-size: 13px;
+      color: #888;
+      font-weight: 300;
+      margin-top: 0.45rem;
+    }
+    .header p a {
+      color: #555;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: #bbb;
+    }
+    .header p a:hover { color: #111; text-decoration-color: #111; }
+
+    /* ── Chat area ── */
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1.5rem 0 0.5rem;
+      scrollbar-width: none;
+    }
+    #chat-messages::-webkit-scrollbar { display: none; }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      max-width: 80%;
+    }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.ai   { align-self: flex-start; align-items: flex-start; }
+
+    .msg-bubble {
+      padding: 0.7rem 1rem;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+    .msg.user .msg-bubble {
+      background: #111;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.ai .msg-bubble {
+      background: #fff;
+      color: #111;
+      border: 1px solid #e5e5e5;
+      border-bottom-left-radius: 4px;
+    }
+
+    /* ── Typing indicator ── */
+    .typing-bubble {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .typing-bubble span {
+      width: 6px; height: 6px;
+      background: #bbb;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30%            { transform: translateY(-5px); }
+    }
+
+    /* ── Centered landing state ── */
+    .landing-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Input wrap ── */
+    .input-wrap {
+      flex-shrink: 0;
+      padding: 0.75rem 0 1rem;
+    }
+    .input-bar {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 0.5rem 0.5rem 0.5rem 1rem;
+      gap: 8px;
+      transition: border-color 0.2s;
+    }
+    .input-bar:focus-within { border-color: #ccc; }
+    .input-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: transparent;
+      color: #111;
+    }
+    .input-bar input::placeholder { color: #aaa; font-weight: 300; }
+    .input-bar button {
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1.1rem;
+      font-size: 0.85rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .input-bar button:hover { opacity: 0.75; }
+    .input-bar button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    #status {
+      font-size: 0.72rem;
+      color: #999;
+      text-align: center;
+      margin-top: 0.35rem;
+      min-height: 1rem;
+    }
+
+    .footer {
+      text-align: center;
+      padding-bottom: 0.75rem;
+      font-size: 0.72rem;
+      color: #bbb;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+    .footer a {
+      color: #999;
+      text-decoration: none;
+    }
+    .footer a:hover { color: #111; }
+  </style>
+</head>
+<body>
+<div class="layout" id="layout">
+
+  <div class="header">
+    <h1>Memoria</h1>
+    <p>Long-Term Memory for AI Agents using Endee Vector Database</p>
+  </div>
+
+  <!-- Landing: input centered -->
+  <div class="landing-center" id="landing-center">
+    <div style="width:100%">
+      <div class="input-bar">
+        <input type="text" id="chat-input" placeholder="Type a message or use: forget: <memory>" autocomplete="off"/>
+        <button id="send-btn" onclick="handleSend()">Send</button>
+      </div>
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <!-- Chat mode: messages + input at bottom (hidden initially) -->
+  <div id="chat-mode" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+    <div id="chat-messages"></div>
+    <div class="input-wrap">
+      <div class="input-bar">
+        <input type="text" id="chat-input-2" placeholder="Type a message or use: forget: <memory>" autocomplete="off"/>
+        <button id="send-btn-2" onclick="handleSend()">Send</button>
+      </div>
+      <div id="status-2"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    powered by <a href="https://github.com/endee-io" target="_blank">endee vector database</a>
+  </div>
+
+</div>
+
+<script>
+  let chatStarted = false;
+
+  const landingCenter = document.getElementById('landing-center');
+  const chatMode      = document.getElementById('chat-mode');
+  const chatMessages  = document.getElementById('chat-messages');
+  const statusEl      = document.getElementById('status');
+  const status2El     = document.getElementById('status-2');
+
+  function getInput()   { return chatStarted ? document.getElementById('chat-input-2')  : document.getElementById('chat-input'); }
+  function getSendBtn() { return chatStarted ? document.getElementById('send-btn-2')     : document.getElementById('send-btn'); }
+  function getStatus()  { return chatStarted ? status2El : statusEl; }
+
+  document.getElementById('chat-input').addEventListener('keydown',   e => { if (e.key === 'Enter') handleSend(); });
+  document.getElementById('chat-input-2').addEventListener('keydown', e => { if (e.key === 'Enter') handleSend(); });
+
+  function switchToChatMode() {
+    landingCenter.style.display = 'none';
+    chatMode.style.display      = 'flex';
+    chatStarted = true;
+    document.getElementById('chat-input-2').focus();
+  }
+
+  function handleSend() {
+    const input = getInput();
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    if (text.toLowerCase().startsWith('forget:')) {
+      handleForget(text.slice(7).trim());
+    } else {
+      if (!chatStarted) switchToChatMode();
+      sendMessage(text);
+    }
+  }
+
+  function appendMessage(role, text) {
+    const msg = document.createElement('div');
+    msg.className = `msg ${role}`;
+    msg.innerHTML = `<div class="msg-bubble">${text}</div>`;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTyping() {
+    const el = document.createElement('div');
+    el.className = 'msg ai';
+    el.id = 'typing';
+    el.innerHTML = `<div class="typing-bubble"><span></span><span></span><span></span></div>`;
+    chatMessages.appendChild(el);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function setStatus(msg, clear = true) {
+    const el = getStatus();
+    el.textContent = msg;
+    if (clear) setTimeout(() => el.textContent = '', 3000);
+  }
+
+  async function sendMessage(message) {
+    const btn = getSendBtn();
+    btn.disabled = true;
+    appendMessage('user', message);
+    showTyping();
+
+    try {
+      const res  = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      removeTyping();
+      appendMessage('ai', data.response || data.error);
+    } catch {
+      removeTyping();
+      appendMessage('ai', 'Something went wrong. Please try again.');
+    } finally {
+      btn.disabled = false;
+      getInput().focus();
+    }
+  }
+
+  async function handleForget(text) {
+    if (!text) { setStatus('Nothing to forget.'); return; }
+    setStatus('Removing memory...', false);
+
+    try {
+      const res  = await fetch('/forget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      setStatus(data.deleted > 0
+        ? `Memory removed. (${data.deleted} vector deleted)`
+        : 'No matching memory found.');
+    } catch {
+      setStatus('Something went wrong.');
+    }
+  }
+</script>
+</body>
+</html>
