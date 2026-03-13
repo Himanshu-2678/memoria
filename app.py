@@ -3,6 +3,7 @@ from src.memory_store import get_client, ensure_index, add_memory, delete_memory
 from src.retrieval import retrieve_context, build_prompt
 from src.agent import generate_response
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -36,7 +37,7 @@ def chat():
 
     # store user message
     add_memory(index, role="user", text=user_message)
-    
+
     # storing assistant response
     add_memory(index, role="assistant", text=response)
 
@@ -57,4 +58,5 @@ def forget():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
