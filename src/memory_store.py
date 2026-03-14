@@ -9,20 +9,22 @@ def get_client():
     return Endee()
 
 def ensure_index(client):
-    existing = list(client.list_indexes())
+    indexes = client.list_indexes()
+    existing = list(indexes)
+
     if INDEX_NAME not in existing:
         try:
+            print(f"[memoria] Creating index {INDEX_NAME}...")
             client.create_index(
-                name = INDEX_NAME,
-                dimension = DIMENSION,
-                space_type = "cosine",
-                precision = Precision.INT8)
-        
-            print(f"Memoria index {INDEX_NAME} created.")
-        except Exception as e:
+                name=INDEX_NAME,
+                dimension=DIMENSION,
+                space_type="cosine",
+                precision=Precision.INT8)
+        except Exception:
             print(f"[memoria] Index already exists, continuing...")
 
-    return client.get_index(name = INDEX_NAME)
+    time.sleep(1)
+    return client.get_index(INDEX_NAME)
 
 # adding to memory
 def add_memory(index, role: str, text: str) -> str:
