@@ -1,5 +1,16 @@
 #!/bin/bash
+
 mkdir -p /data
+
+echo "Starting Endee..."
+
 NDD_DATA_DIR=/data /usr/local/bin/entrypoint.sh &
-sleep 8
-cd /app && python3 app.py
+ENDEE_PID=$!
+
+echo "Waiting for Endee to start..."
+sleep 6
+
+echo "Starting Flask..."
+
+cd /app
+python3 app.py
